@@ -1,0 +1,112 @@
+{
+  "mode": "normal",
+  "fournisseurs": [
+    {
+      "name": "Fournisseur1",
+      "host": "127.0.0.1",
+      "port": 5001,
+      "services": {
+        "billet_1": {
+          "prix_min": 400,
+          "date_limite": "2024-12-15",
+          "moyen_transport": "avion",
+          "temps_trajet": "2h"
+        },
+        "billet_2": {
+          "prix_min": 300,
+          "date_limite": "2024-12-10",
+          "moyen_transport": "train",
+          "temps_trajet": "4h"
+        },
+        "billet_5": {
+          "prix_min": 350,
+          "date_limite": "2024-12-13",
+          "moyen_transport": "train",
+          "temps_trajet": "4h"
+        }
+      }
+    },
+    {
+      "name": "Fournisseur2",
+      "host": "127.0.0.1",
+      "port": 5003,
+      "services": {
+        "billet_3": {
+          "prix_min": 350,
+          "date_limite": "2024-12-12",
+          "moyen_transport": "avion",
+          "temps_trajet": "3h"
+        },
+        "billet_4": {
+          "prix_min": 250,
+          "date_limite": "2024-12-11",
+          "moyen_transport": "train",
+          "temps_trajet": "5h"
+        },
+        "billet_6": {
+          "prix_min": 300,
+          "date_limite": "2024-12-14",
+          "moyen_transport": "avion",
+          "temps_trajet": "3h"
+        }
+      }
+    }
+  ],
+  "acheteurs": [
+    {
+      "name": "acheteur1",
+      "host": "127.0.0.1",
+      "port": 5002,
+      "budget": 300,
+      "preferences": {
+        "moyen_transport_pref": {"name": "avion", "order": 5},
+        "date_limite": {"name": "2024-12-10", "order": 1},
+        "temps_trajet_max": {"name": "3h", "order": 3}
+      }
+    },
+    {
+      "name": "acheteur2",
+      "host": "127.0.0.1",
+      "port": 5004,
+      "budget": 400,
+      "preferences": {
+        "moyen_transport_pref": {"name": "train", "order": 4},
+        "date_limite": {"name": "2024-12-11", "order": 1},
+        "temps_trajet_max": {"name": "5h", "order": 2}
+      }
+    },
+    {
+      "name": "acheteur3",
+      "host": "127.0.0.1",
+      "port": 5005,
+      "budget": 500,
+      "preferences": {
+        "moyen_transport_pref": {"name": "avion", "order": 3},
+        "date_limite": {"name": "2024-12-12", "order": 2},
+        "temps_trajet_max": {"name": "4h", "order": 4}
+      }
+    },
+    {
+      "name": "acheteur4",
+      "host": "127.0.0.1",
+      "port": 5006,
+      "budget": 300,
+      "preferences": {
+        "moyen_transport_pref": {"name": "train", "order": 2},
+        "date_limite": {"name": "2024-12-09", "order": 1},
+        "temps_trajet_max": {"name": "6h", "order": 3}
+      }
+    },
+    {
+      "name": "acheteur5",
+      "host": "127.0.0.1",
+      "port": 5007,
+      "budget": 350,
+      "preferences": {
+        "moyen_transport_pref": {"name": "train", "order": 3},
+        "date_limite": {"name": "2024-12-14", "order": 2},
+        "temps_trajet_max": {"name": "5h", "order": 4}
+      }
+    }
+  ]
+}
