@@ -161,7 +161,8 @@ def main():
 
                     reponse = acheteur.receive_message()
                     decision = reponse.get("decision")
-                    if decision == "accepter":
+                    if decision > 0: # decision représente le gain possible de l'acheteur par rapport à son budget
+
                         print(f"{acheteur.name} a accepté l'offre pour {service_id}.")
                         # L'acheteur a acheté le service, donc on marque son achat
                         acheteur.achete = True  # Marque que l'acheteur a acheté un service
