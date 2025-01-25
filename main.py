@@ -1,9 +1,11 @@
+from logging import exception
 import random
 import time
 from threading import Thread
 from agents import Fournisseur, Acheteur, Coalition
 from itertools import combinations
 from collections import namedtuple
+import reductions_combinaisons
 
 REDUCTIONS_COMBINAISONS = {
     ("acheteur1",): 0,
@@ -25,7 +27,8 @@ def load_config(file_path):
 def valeur_coalition(coalition):
     """Calcule la valeur d'une coalition en fonction des budgets et de la réduction prédéfinie."""
     noms_acheteurs = tuple(sorted(acheteur.name.lower() for acheteur in coalition))
-    reduction = REDUCTIONS_COMBINAISONS.get(noms_acheteurs, 0)  # Réduction par défaut : 0%
+    #reduction = REDUCTIONS_COMBINAISONS.get(noms_acheteurs, 0)  # Réduction par défaut : 0%
+    reduction= reductions_combinaisons.get_reduction(noms_acheteurs)
     budgets = [acheteur.budget for acheteur in coalition]
     valeur_totale = sum(budgets) * (reduction / 100)
     return valeur_totale
@@ -79,8 +82,8 @@ def former_coalitions_idp(acheteurs):
 
         if meilleure_coalition:
             noms_acheteurs = tuple(sorted([acheteur.name for acheteur in meilleure_coalition]))
-            reduction = REDUCTIONS_COMBINAISONS.get(noms_acheteurs, 0)
-
+            #reduction = REDUCTIONS_COMBINAISONS.get(noms_acheteurs, 0)
+            reduction=reductions_combinaisons.get_reduction(noms_acheteurs)
             coalition = Coalition(list(meilleure_coalition), reduction)
             meilleures_coalitions.append(coalition)
 
@@ -185,41 +188,38 @@ def main():
     # Parcourir les offres et les traiter
     for coalition in coalitions:
         print(f"====================Traitement des offres pour {coalition}====================")
-        meilleure_combinaison_valeur = 0
-        meilleure_combinaison = None
+        billets_achetes = []
+        acheteurs_sans_billet = list(coalition.acheteurs)
+
         for acheteur in coalition.acheteurs:
+            meilleure_offre = None
+            meilleure_valeur = 0
+
             for offre in acheteur.offres:
                 if offre["service_id"] in [billet["service_id"] for billet in billets_achetes]:
                     continue  # Ignorer les offres pour les services déjà achetés
-                if len(coalition.acheteurs) == 1:
-                    combinaison_valeur = offre["decision"]
-                    if combinaison_valeur > meilleure_combinaison_valeur:
-                        meilleure_combinaison_valeur = combinaison_valeur
-                        meilleure_combinaison = (acheteur.name, offre["service_id"], offre["prix"], offre["decision"])
-                else:
-                    for autre_acheteur in coalition.acheteurs:
-                        if acheteur != autre_acheteur:
-                            for autre_offre in autre_acheteur.offres:
-                                if offre["service_id"] != autre_offre["service_id"] and autre_offre["service_id"] not in [billet["service_id"] for billet in billets_achetes]:
-                                    combinaison_valeur = offre["decision"] + autre_offre["decision"]
-                                    if combinaison_valeur > meilleure_combinaison_valeur:
-                                        meilleure_combinaison_valeur = combinaison_valeur
-                                        meilleure_combinaison = (acheteur.name, autre_acheteur.name, offre["service_id"], autre_offre["service_id"], offre["prix"], autre_offre["prix"], offre["decision"], autre_offre["decision"])
-        
-        if meilleure_combinaison:
-            print(f"La coalition {coalition} a obtenu une valeur de décision de {meilleure_combinaison_valeur}.")
-            if len(meilleure_combinaison) == 4:
-                print(f"L'acheteur {meilleure_combinaison[0]} a acheté {meilleure_combinaison[1]} pour {meilleure_combinaison[2]} euros avec une valeur de décision de {meilleure_combinaison[3]}.")
-                billets_achetes.append({"service_id": meilleure_combinaison[1]})
-            else:
-                print(f"L'acheteur {meilleure_combinaison[0]} a acheté {meilleure_combinaison[2]} pour {meilleure_combinaison[4]} euros avec une valeur de décision de {meilleure_combinaison[6]}.")
-                print(f"L'acheteur {meilleure_combinaison[1]} a acheté {meilleure_combinaison[3]} pour {meilleure_combinaison[5]} euros avec une valeur de décision de {meilleure_combinaison[7]}.")
-                billets_achetes.append({"service_id": meilleure_combinaison[2]})
-                billets_achetes.append({"service_id": meilleure_combinaison[3]})
 
+                if offre["decision"] > meilleure_valeur:
+                    meilleure_valeur = offre["decision"]
+                    meilleure_offre = offre
 
-            
+            if meilleure_offre:
+                acheteur.achete = True
+                billets_achetes.append({"service_id": meilleure_offre["service_id"]})
+                acheteurs_sans_billet.remove(acheteur)
+                print(f"L'acheteur {acheteur.name} a acheté {meilleure_offre['service_id']} pour {meilleure_offre['prix']} euros avec une valeur de décision de {meilleure_offre['decision']}.")
+
+        if acheteurs_sans_billet:
+            print(f"Les acheteurs suivants n'ont pas trouvé de billets dans la coalition {coalition}:")
+            for acheteur in acheteurs_sans_billet:
+                print(f"{acheteur.name}")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except exception as e:
+        print(e)
+        print("Une erreur est survenue lors de l'exécution du programme.")
+        print("Veuillez vérifier que le fichier config.json est correctement formaté.")
+        exit(1)
 
