@@ -35,7 +35,7 @@ class AgentBase:
                 message = json.loads(data.decode('utf-8'))
                 print(f"{self.name} a reçu un message : {message}")
 
-                if message["type"] == "reponse" and message["decision"] == "accepter":
+                if message["type"] == "reponse" and message["decision"] > 0:
                     service_id = message["service_id"]
                     if service_id not in self.services_achetes:
                         self.services_achetes.add(service_id)
@@ -88,11 +88,11 @@ class Acheteur(AgentBase):
         print(f"{self.name} analyse l'offre {service_id} à {prix} euros.")
 
         if prix <= self.budget:
-            print(f"{self.name} accepte l'offre pour {service_id}.")
-            return "accepter"
+            print(f"{self.name} accepte l'offre pour {service_id} pour un gain de {self.budget - prix} euros.")
         else:
-            print(f"{self.name} refuse l'offre car le prix dépasse le budget.")
-            return "refuser"
+            print(f"{self.name} refuse l'offre car le prix dépasse le budget de {prix - self.budget} euros.")
+
+        return self.budget - prix
 
     def envoyer_reponse(self, fournisseur_host, fournisseur_port, offre, decision):
         """Envoie une réponse au fournisseur."""
@@ -115,7 +115,7 @@ class Acheteur(AgentBase):
 
                 if "fournisseur" not in message:
                     print("La clé 'fournisseur' est manquante dans le message.")
-                    return {"decision": "refuser", "service_id": message["service_id"]}
+                    return {"decision": -1, "service_id": message["service_id"]}
 
                 # Analyser l'offre et envoyer une réponse
                 decision = self.analyser_offre(message)
