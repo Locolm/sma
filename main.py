@@ -104,7 +104,7 @@ def main():
         )
         fournisseurs.append(fournisseur)
 
-    print("Fin de l'importation des fournisseurs")
+    print("===============Fin de l'importation des fournisseurs===============")
     # Initialiser les acheteurs
     acheteurs = []
     for acheteur_data in config["acheteurs"]:
@@ -118,10 +118,10 @@ def main():
         acheteurs.append(acheteur)
 
 
-    print("fin de l'importation des acheteurs")
+    print("===============fin de l'importation des acheteurs===============")
     # Former des coalitions
     coalitions = former_coalitions_idp(acheteurs)
-    print("fin de la formation des coalitions")
+    print("===============fin de la formation des coalitions===============")
     for coalition in coalitions:
         print(coalition)
 
@@ -134,10 +134,14 @@ def main():
     time.sleep(1)
 
     # Simulation des propositions
+    print("===============Simulation des propositions===============")
     for fournisseur in fournisseurs:
+        print(f"==============={fournisseur.name}===============")
         for coalition in coalitions:
+            print(f"==============={coalition}===============")
             # On boucle d'abord sur les acheteurs de la coalition
             for acheteur in coalition.acheteurs:
+                print(f"==============={acheteur.name}===============")
                 # Si l'acheteur a déjà acheté quelque chose, on passe à l'acheteur suivant
                 if acheteur.achete:
                     print(f"{acheteur.name} a déjà acheté un service.")
@@ -145,6 +149,7 @@ def main():
 
                 # Boucle sur les services proposés par ce fournisseur
                 for service_id, service in list(fournisseur.services.items()):  # Utiliser list pour pouvoir modifier la dict
+                    print(f"===============Service {service_id}===============")
                     # On propose un service si l'acheteur n'a pas encore acheté ce service
                     prix_avec_reduction = coalition.appliquer_reduction(service["prix_min"])
                     print(f"{fournisseur.name} propose {service_id} à {prix_avec_reduction} euros pour {coalition}.")
@@ -157,25 +162,30 @@ def main():
                         "fournisseurHost": fournisseur.host,
                         "port": fournisseur.port
                     }
-                    acheteur.send_message(acheteur.host, acheteur.port, message)
+                    try:
+                        acheteur.send_message(acheteur.host, acheteur.port, message)
 
-                    reponse = acheteur.receive_message()
-                    decision = reponse.get("decision")
-                    if decision > 0: # decision représente le gain possible de l'acheteur par rapport à son budget
+                        # Attendre un court délai pour s'assurer que la réponse a été reçue
+                        time.sleep(1)  # Attendez 2 secondes (vous pouvez ajuster ce délai)
 
-                        print(f"{acheteur.name} a accepté l'offre pour {service_id}.")
-                        # L'acheteur a acheté le service, donc on marque son achat
-                        acheteur.achete = True  # Marque que l'acheteur a acheté un service
+                        reponse = acheteur.receive_message() # decision, service_id
+                        decision = reponse.get("decision")
+                        if decision > 0: # decision représente le gain possible de l'acheteur par rapport à son budget
 
-                        # Le service est retiré des services proposés par le fournisseur
-                        fournisseur.services.pop(service_id)
+                            #On incrémente la liste d'offre possible pour l'acheteur
+                            acheteur.offres.append(reponse)
+                        else:
+                            print(f"{acheteur.name} a refusé l'offre pour {service_id}.")
+                    except Exception as e:
+                        print(f"Erreur lors de l'envoi de l'offre à {acheteur.name} pour {service_id}: {e}")
+                        continue
 
-                        # Ajoute le service à la liste des services achetés du fournisseur
-                        fournisseur.services_achetes.add(service_id)
-
-                        break  # On arrête la boucle sur les services pour cet acheteur
-                    else:
-                        print(f"{acheteur.name} a refusé l'offre pour {service_id}.")
+    # Affichage des offres reçues par les acheteurs
+    print("===============Offres reçues par les acheteurs===============")
+    for acheteur in acheteurs:
+        print(f"{acheteur.name} a reçu les offres suivantes :")
+        for offre in acheteur.offres:
+            print(f"{offre}")
 
 if __name__ == "__main__":
     main()

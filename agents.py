@@ -80,6 +80,7 @@ class Acheteur(AgentBase):
         self.budget = budget
         self.preferences = preferences
         self.achete=False
+        self.offres = []  # Liste des offres acceptable reçues
 
     def analyser_offre(self, offre):
         """Analyse une offre reçue."""
