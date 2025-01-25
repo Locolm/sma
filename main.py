@@ -171,17 +171,6 @@ def main():
                     decision = reponse.get("decision")
                     if decision > 0:
                         acheteur.offres.append(reponse)
-                        # print(f"{acheteur.name} a accepté l'offre pour {service_id}.")
-                        # # L'acheteur a acheté le service, donc on marque son achat
-                        # acheteur.achete = True  # Marque que l'acheteur a acheté un service
-
-                        # # Le service est retiré des services proposés par le fournisseur
-                        # fournisseur.services.pop(service_id)
-
-                        # # Ajoute le service à la liste des services achetés du fournisseur
-                        # fournisseur.services_achetes.add(service_id)
-
-                        #break  # On arrête la boucle sur les services pour cet acheteur
                     else:
                         print(f"{acheteur.name} a refusé l'offre pour {service_id}.")
     
@@ -190,6 +179,46 @@ def main():
         print(f"{acheteur.name} a reçu les offres suivantes :")
         for offre in acheteur.offres:
             print(offre)
+            # Table pour stocker les billets achetés
+            billets_achetes = []
+
+    # Parcourir les offres et les traiter
+    for coalition in coalitions:
+        print(f"====================Traitement des offres pour {coalition}====================")
+        meilleure_combinaison_valeur = 0
+        meilleure_combinaison = None
+        for acheteur in coalition.acheteurs:
+            for offre in acheteur.offres:
+                if offre["service_id"] in [billet["service_id"] for billet in billets_achetes]:
+                    continue  # Ignorer les offres pour les services déjà achetés
+                if len(coalition.acheteurs) == 1:
+                    combinaison_valeur = offre["decision"]
+                    if combinaison_valeur > meilleure_combinaison_valeur:
+                        meilleure_combinaison_valeur = combinaison_valeur
+                        meilleure_combinaison = (acheteur.name, offre["service_id"], offre["prix"], offre["decision"])
+                else:
+                    for autre_acheteur in coalition.acheteurs:
+                        if acheteur != autre_acheteur:
+                            for autre_offre in autre_acheteur.offres:
+                                if offre["service_id"] != autre_offre["service_id"] and autre_offre["service_id"] not in [billet["service_id"] for billet in billets_achetes]:
+                                    combinaison_valeur = offre["decision"] + autre_offre["decision"]
+                                    if combinaison_valeur > meilleure_combinaison_valeur:
+                                        meilleure_combinaison_valeur = combinaison_valeur
+                                        meilleure_combinaison = (acheteur.name, autre_acheteur.name, offre["service_id"], autre_offre["service_id"], offre["prix"], autre_offre["prix"], offre["decision"], autre_offre["decision"])
+        
+        if meilleure_combinaison:
+            print(f"La coalition {coalition} a obtenu une valeur de décision de {meilleure_combinaison_valeur}.")
+            if len(meilleure_combinaison) == 4:
+                print(f"L'acheteur {meilleure_combinaison[0]} a acheté {meilleure_combinaison[1]} pour {meilleure_combinaison[2]} euros avec une valeur de décision de {meilleure_combinaison[3]}.")
+                billets_achetes.append({"service_id": meilleure_combinaison[1]})
+            else:
+                print(f"L'acheteur {meilleure_combinaison[0]} a acheté {meilleure_combinaison[2]} pour {meilleure_combinaison[4]} euros avec une valeur de décision de {meilleure_combinaison[6]}.")
+                print(f"L'acheteur {meilleure_combinaison[1]} a acheté {meilleure_combinaison[3]} pour {meilleure_combinaison[5]} euros avec une valeur de décision de {meilleure_combinaison[7]}.")
+                billets_achetes.append({"service_id": meilleure_combinaison[2]})
+                billets_achetes.append({"service_id": meilleure_combinaison[3]})
+
+
+            
 
 if __name__ == "__main__":
     main()

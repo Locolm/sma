@@ -133,7 +133,7 @@ class Acheteur(AgentBase):
 
         # Analyser l'offre et envoyer une réponse
         decision = self.analyser_offre(message)
-        return {"decision": decision, "service_id": message["service_id"]}
+        return {"decision": decision, "service_id": message["service_id"], "prix": message["prix"], "fournisseur": message["fournisseur"]}
 
 
 
