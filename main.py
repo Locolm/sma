@@ -4,6 +4,7 @@ from threading import Thread
 from agents import Fournisseur, Acheteur, Coalition
 from itertools import combinations
 from collections import namedtuple
+import util
 
 REDUCTIONS_COMBINAISONS = {
     ("acheteur1",): 0,
@@ -88,8 +89,7 @@ def former_coalitions_idp(acheteurs):
 
     return meilleures_coalitions
 
-
-if __name__ == "__main__":
+def main():
     config = load_config("config.json")
     mode = config.get("mode", "normal")
     print(f"Mode de négociation : {mode}")
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         )
         fournisseurs.append(fournisseur)
 
-    print("Fin de l'importation des fournisseurs")
+    print("==============Fin de l'importation des fournisseurs==============")
     # Initialiser les acheteurs
     acheteurs = []
     for acheteur_data in config["acheteurs"]:
@@ -119,10 +119,10 @@ if __name__ == "__main__":
         acheteurs.append(acheteur)
 
 
-    print("fin de l'importation des acheteurs")
+    print("==============fin de l'importation des acheteurs==============")
     # Former des coalitions
     coalitions = former_coalitions_idp(acheteurs)
-    print("fin de la formation des coalitions")
+    print("==============fin de la formation des coalitions==============")
     for coalition in coalitions:
         print(coalition)
 
@@ -134,15 +134,12 @@ if __name__ == "__main__":
 
     time.sleep(1)
 
-# Simulation des propositions
-for fournisseur in fournisseurs:
+    # Simulation des propositions
     for coalition in coalitions:
-        # On boucle d'abord sur les acheteurs de la coalition
-        for acheteur in coalition.acheteurs:
-            # Si l'acheteur a déjà acheté quelque chose, on passe à l'acheteur suivant
-            if acheteur.achete:
-                print(f"{acheteur.name} a déjà acheté un service.")
-                continue
+        for fournisseur in fournisseurs:
+        
+            print(f"==============Propositions de {fournisseur.name} pour {coalition}==============")
+            # On boucle d'abord sur les acheteurs de la coalition
 
             # Boucle sur les services proposés par ce fournisseur
             for service_id, service in list(fournisseur.services.items()):  # Utiliser list pour pouvoir modifier la dict
@@ -158,22 +155,68 @@ for fournisseur in fournisseurs:
                     "fournisseurHost": fournisseur.host,
                     "port": fournisseur.port
                 }
-                acheteur.send_message(acheteur.host, acheteur.port, message)
+                for acheteur in coalition.acheteurs:
+                    # Si l'acheteur a déjà acheté quelque chose, on passe à l'acheteur suivant
+                    if acheteur.achete:
+                        print(f"{acheteur.name} a déjà acheté un service.")
+                        continue
 
-                reponse = acheteur.receive_message()
-                decision = reponse.get("decision")
-                if decision == "accepter":
-                    print(f"{acheteur.name} a accepté l'offre pour {service_id}.")
-                    # L'acheteur a acheté le service, donc on marque son achat
-                    acheteur.achete = True  # Marque que l'acheteur a acheté un service
+                    # Vérifier si l'acheteur est bien en écoute, sinon le configurer
+                    util.configure_listener(acheteur)
+                    try:
+                        #envoyer l'offre à l'acheteur pour évaluation
+                        acheteur.send_message(acheteur.host, acheteur.port, message)
 
-                    # Le service est retiré des services proposés par le fournisseur
-                    fournisseur.services.pop(service_id)
+                        reponse = acheteur.receive_message()
+                        decision = reponse.get("decision")
+                        print(f"decision de {acheteur.name} pour {service_id} : {decision}")
+                        if decision > 0:
+                            acheteur.offres_potentielles.append({
+                                "decision": decision,
+                                "service_id": service_id,
+                                "fournisseur": fournisseur.name,
+                                "prix_reduit": prix_avec_reduction,
+                                "details": service
+                            })
+                            print(f"{acheteur.name} a attribué une valeur de decision {decision} à l'offre pour {service_id}.")
+                        else:
+                            print(f"{acheteur.name} ne trouve pas l'offre acceptable {service_id}.")
+                    except Exception as e:
+                        print(f"Erreur lors de l'envoi de l'offre à {acheteur.name} avec {fournisseur.name} pour {service_id} : {e}")
+                        continue # Passer à l'offre suivante ou à l'acheteur suivant en cas de problème de connexion
+                    
+    # Après la boucle principale, où toutes les offres ont été collectées
+    for acheteur in [acheteur for coalition in coalitions for acheteur in coalition.acheteurs]:
+        print(f"==============Traitement des offres pour {acheteur.name}==============")
+        # Si l'acheteur a déjà acheté quelque chose, on passe à l'acheteur suivant
+        if acheteur.achete:
+            print(f"{acheteur.name} a déjà acheté un service. Il ne peut plus en acheter un autre.")
+            continue
 
-                    # Ajoute le service à la liste des services achetés du fournisseur
-                    fournisseur.services_achetes.add(service_id)
+        # Vérifier s'il y a des offres potentielles
+        if not acheteur.offres_potentielles:
+            print(f"{acheteur.name} n'a reçu aucune offre valable.")
+            continue
 
-                    break  # On arrête la boucle sur les services pour cet acheteur
-                else:
-                    print(f"{acheteur.name} a refusé l'offre pour {service_id}.")
+        # Trouver la meilleure offre basée sur la valeur attribuée
+        meilleure_offre = max(acheteur.offres_potentielles, key=lambda offre: offre["decision"])
+        print(f"{acheteur.name} a sélectionné l'offre avec la valeur maximale : {meilleure_offre}")
+
+        # Marquer que l'acheteur accepte cette offre
+        acheteur.achete = True
+
+        # Retirer le service du fournisseur correspondant
+        fournisseur_nom = meilleure_offre["fournisseur"]
+        service_id = meilleure_offre["service_id"]
+        for fournisseur in fournisseurs:
+            if fournisseur.name == fournisseur_nom and service_id in fournisseur.services:
+                fournisseur.services.pop(service_id)
+                fournisseur.services_achetes.add(service_id)
+                print(f"Le service {service_id} a été retiré des services disponibles de {fournisseur_nom} après achat par {acheteur.name}.")
+                break
+        else:
+            print(f"Erreur : le service {service_id} du fournisseur {fournisseur_nom} n'a pas été trouvé.")
+
+if __name__ == "__main__":
+    main()
 
