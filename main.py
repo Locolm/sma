@@ -221,5 +221,6 @@ if __name__ == "__main__":
         print(e)
         print("Une erreur est survenue lors de l'exécution du programme.")
         print("Veuillez vérifier que le fichier config.json est correctement formaté.")
+        print("Chaque agents doivent avoir un nom et port différents.")
         exit(1)
 

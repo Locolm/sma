@@ -35,9 +35,9 @@ def calculate_similarity(preferences):
             for key in prefs1:
                 if key in prefs2:
                     if prefs1[key]['name'] == prefs2[key]['name']:
-                        similarity_score += 2
+                        similarity_score += 1
                         if prefs1[key]['order'] == prefs2[key]['order']:
-                            similarity_score += 3
+                            similarity_score += 2
     
     return similarity_score
 
