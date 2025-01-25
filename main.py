@@ -88,8 +88,7 @@ def former_coalitions_idp(acheteurs):
 
     return meilleures_coalitions
 
-
-if __name__ == "__main__":
+def main():
     config = load_config("config.json")
     mode = config.get("mode", "normal")
     print(f"Mode de négociation : {mode}")
@@ -134,46 +133,49 @@ if __name__ == "__main__":
 
     time.sleep(1)
 
-# Simulation des propositions
-for fournisseur in fournisseurs:
-    for coalition in coalitions:
-        # On boucle d'abord sur les acheteurs de la coalition
-        for acheteur in coalition.acheteurs:
-            # Si l'acheteur a déjà acheté quelque chose, on passe à l'acheteur suivant
-            if acheteur.achete:
-                print(f"{acheteur.name} a déjà acheté un service.")
-                continue
+    # Simulation des propositions
+    for fournisseur in fournisseurs:
+        for coalition in coalitions:
+            # On boucle d'abord sur les acheteurs de la coalition
+            for acheteur in coalition.acheteurs:
+                # Si l'acheteur a déjà acheté quelque chose, on passe à l'acheteur suivant
+                if acheteur.achete:
+                    print(f"{acheteur.name} a déjà acheté un service.")
+                    continue
 
-            # Boucle sur les services proposés par ce fournisseur
-            for service_id, service in list(fournisseur.services.items()):  # Utiliser list pour pouvoir modifier la dict
-                # On propose un service si l'acheteur n'a pas encore acheté ce service
-                prix_avec_reduction = coalition.appliquer_reduction(service["prix_min"])
-                print(f"{fournisseur.name} propose {service_id} à {prix_avec_reduction} euros pour {coalition}.")
+                # Boucle sur les services proposés par ce fournisseur
+                for service_id, service in list(fournisseur.services.items()):  # Utiliser list pour pouvoir modifier la dict
+                    # On propose un service si l'acheteur n'a pas encore acheté ce service
+                    prix_avec_reduction = coalition.appliquer_reduction(service["prix_min"])
+                    print(f"{fournisseur.name} propose {service_id} à {prix_avec_reduction} euros pour {coalition}.")
 
-                message = {
-                    "service_id": service_id,
-                    "prix": prix_avec_reduction,
-                    "details": service,
-                    "fournisseur": fournisseur.name,
-                    "fournisseurHost": fournisseur.host,
-                    "port": fournisseur.port
-                }
-                acheteur.send_message(acheteur.host, acheteur.port, message)
+                    message = {
+                        "service_id": service_id,
+                        "prix": prix_avec_reduction,
+                        "details": service,
+                        "fournisseur": fournisseur.name,
+                        "fournisseurHost": fournisseur.host,
+                        "port": fournisseur.port
+                    }
+                    acheteur.send_message(acheteur.host, acheteur.port, message)
 
-                reponse = acheteur.receive_message()
-                decision = reponse.get("decision")
-                if decision == "accepter":
-                    print(f"{acheteur.name} a accepté l'offre pour {service_id}.")
-                    # L'acheteur a acheté le service, donc on marque son achat
-                    acheteur.achete = True  # Marque que l'acheteur a acheté un service
+                    reponse = acheteur.receive_message()
+                    decision = reponse.get("decision")
+                    if decision == "accepter":
+                        print(f"{acheteur.name} a accepté l'offre pour {service_id}.")
+                        # L'acheteur a acheté le service, donc on marque son achat
+                        acheteur.achete = True  # Marque que l'acheteur a acheté un service
 
-                    # Le service est retiré des services proposés par le fournisseur
-                    fournisseur.services.pop(service_id)
+                        # Le service est retiré des services proposés par le fournisseur
+                        fournisseur.services.pop(service_id)
 
-                    # Ajoute le service à la liste des services achetés du fournisseur
-                    fournisseur.services_achetes.add(service_id)
+                        # Ajoute le service à la liste des services achetés du fournisseur
+                        fournisseur.services_achetes.add(service_id)
 
-                    break  # On arrête la boucle sur les services pour cet acheteur
-                else:
-                    print(f"{acheteur.name} a refusé l'offre pour {service_id}.")
+                        break  # On arrête la boucle sur les services pour cet acheteur
+                    else:
+                        print(f"{acheteur.name} a refusé l'offre pour {service_id}.")
+
+if __name__ == "__main__":
+    main()
 
