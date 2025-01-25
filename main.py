@@ -165,24 +165,31 @@ def main():
                         "fournisseurHost": fournisseur.host,
                         "port": fournisseur.port
                     }
-                    acheteur.send_message(acheteur.host, acheteur.port, message)
-
-                    reponse = acheteur.receive_message()
+                    #acheteur.send_message(acheteur.host, acheteur.port, message)
+                    #response = acheteur.recieve_message()
+                    reponse = acheteur.receive_message_direct(message)
                     decision = reponse.get("decision")
                     if decision > 0:
-                        print(f"{acheteur.name} a accepté l'offre pour {service_id}.")
-                        # L'acheteur a acheté le service, donc on marque son achat
-                        acheteur.achete = True  # Marque que l'acheteur a acheté un service
+                        acheteur.offres.append(reponse)
+                        # print(f"{acheteur.name} a accepté l'offre pour {service_id}.")
+                        # # L'acheteur a acheté le service, donc on marque son achat
+                        # acheteur.achete = True  # Marque que l'acheteur a acheté un service
 
-                        # Le service est retiré des services proposés par le fournisseur
-                        fournisseur.services.pop(service_id)
+                        # # Le service est retiré des services proposés par le fournisseur
+                        # fournisseur.services.pop(service_id)
 
-                        # Ajoute le service à la liste des services achetés du fournisseur
-                        fournisseur.services_achetes.add(service_id)
+                        # # Ajoute le service à la liste des services achetés du fournisseur
+                        # fournisseur.services_achetes.add(service_id)
 
-                        break  # On arrête la boucle sur les services pour cet acheteur
+                        #break  # On arrête la boucle sur les services pour cet acheteur
                     else:
                         print(f"{acheteur.name} a refusé l'offre pour {service_id}.")
+    
+    print("====================Offres trouvées : ====================")
+    for acheteur in acheteurs:
+        print(f"{acheteur.name} a reçu les offres suivantes :")
+        for offre in acheteur.offres:
+            print(offre)
 
 if __name__ == "__main__":
     main()

@@ -80,6 +80,7 @@ class Acheteur(AgentBase):
         self.budget = budget
         self.preferences = preferences
         self.achete=False
+        self.offres = []  # Pour suivre les offres reçues
 
     def analyser_offre(self, offre):
         """Analyse une offre reçue."""
@@ -121,6 +122,18 @@ class Acheteur(AgentBase):
                 decision = self.analyser_offre(message)
                 self.envoyer_reponse(message["fournisseurHost"], message["port"], message, decision)
                 return {"decision": decision, "service_id": message["service_id"]}
+            
+    def receive_message_direct(self, message):
+        """Traite un message reçu directement sans utiliser de socket."""
+        print(f"{self.name} a reçu un message : {message}")
+
+        if "fournisseur" not in message:
+            print("La clé 'fournisseur' est manquante dans le message.")
+            return {"decision": -1, "service_id": message["service_id"]}
+
+        # Analyser l'offre et envoyer une réponse
+        decision = self.analyser_offre(message)
+        return {"decision": decision, "service_id": message["service_id"]}
 
 
 
