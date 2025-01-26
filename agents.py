@@ -81,10 +81,15 @@ class Fournisseur(AgentBase):
         """Répond à une contre-offre en fonction de la stratégie."""
         prix_par_acheteur = message["prix"]
         service_id = message["service_id"]
+        min_price = self.services[service_id]['prix_min']
 
         if self.strategy == "accept_first":
-            print(f"{self.name} accepte immédiatement le prix proposé de {prix_par_acheteur} pour {service_id}.")
-            return {"service_id": service_id, "prix": prix_par_acheteur, "decision": 1}
+            if prix_par_acheteur >= min_price:
+                print(f"{self.name} accepte immédiatement le prix proposé de {prix_par_acheteur} pour {service_id}.")
+                return {"service_id": service_id, "prix": prix_par_acheteur, "decision": 1}
+            else:
+                print(f"{self.name} refuse l'offre car le prix est trop bas.")
+                return {"service_id": service_id, "prix": prix_par_acheteur, "decision": -1}
 
         elif self.strategy == "randomly_accept":
             die = random.randint(1, 100)
@@ -97,9 +102,13 @@ class Fournisseur(AgentBase):
                 return {"service_id": service_id, "prix": nouveau_prix, "decision": -1}
 
         elif self.strategy in ["negotiate_until_satisfied", "reject_first_accept_second", "negotiate_once"]:
-            nouveau_prix = round(prix_par_acheteur * 1.05, 2)  # Augmente de 5%
-            print(f"{self.name} refuse et propose un nouveau prix : {nouveau_prix}.")
-            return {"service_id": service_id, "prix": nouveau_prix, "decision": -1}
+            if prix_par_acheteur >= min_price:
+                print(f"{self.name} accepte le prix proposé de {prix_par_acheteur} pour {service_id}.")
+                return {"service_id": service_id, "prix": prix_par_acheteur, "decision": 1}
+            else:
+                nouveau_prix = round(prix_par_acheteur * 1.05, 2)  # Augmente de 5%
+                print(f"{self.name} refuse et propose un nouveau prix : {nouveau_prix}.")
+                return {"service_id": service_id, "prix": nouveau_prix, "decision": 0}
 
 
 class Acheteur(AgentBase):
@@ -148,7 +157,7 @@ class Acheteur(AgentBase):
                 self.previous_rejected.append(service_id)
                 nouveau_prix = round(prix * 0.9, 2)  # Réduction de 10%
                 print(f"{self.name} rejette l'offre initiale et propose un nouveau prix : {nouveau_prix}.")
-                return {"decision": -1, "prix": nouveau_prix, "service_id":service_id}
+                return {"decision": 0, "prix": nouveau_prix, "service_id":service_id}
 
         elif self.strategy == "randomly_accept":
             die = random.randint(1, 100)
@@ -158,7 +167,7 @@ class Acheteur(AgentBase):
             else:
                 nouveau_prix = round(prix * 0.9, 2)
                 print(f"{self.name} refuse et propose un nouveau prix : {nouveau_prix}.")
-                return {"decision": -1, "prix": nouveau_prix, "service_id":service_id}
+                return {"decision": 0, "prix": nouveau_prix, "service_id":service_id}
 
         elif self.strategy == "negotiate_until_satisfied":
             if prix <= self.budget:
@@ -167,7 +176,7 @@ class Acheteur(AgentBase):
             else:
                 nouveau_prix = round(prix * 0.9, 2)
                 print(f"{self.name} rejette et continue à négocier avec un prix de {nouveau_prix}.")
-                return {"decision": -1, "prix": nouveau_prix, "service_id":service_id}
+                return {"decision": 0, "prix": nouveau_prix, "service_id":service_id}
 
         elif self.strategy == "negotiate_once":
             if service_id in self.previous_rejected:
@@ -178,7 +187,7 @@ class Acheteur(AgentBase):
                 self.previous_rejected.append(service_id)
                 nouveau_prix = round(prix * 0.9, 2)
                 print(f"{self.name} rejette une fois et propose un nouveau prix : {nouveau_prix}.")
-                return {"decision": -1, "prix": nouveau_prix, "service_id":service_id}
+                return {"decision": 0, "prix": nouveau_prix, "service_id":service_id}
 
     def envoyer_reponse(self, fournisseur_host, fournisseur_port, offre, decision):
         """Envoie une réponse au fournisseur."""

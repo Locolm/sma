@@ -126,7 +126,8 @@ def main():
             acheteur_data["host"],
             acheteur_data["port"],
             acheteur_data["budget"],
-            acheteur_data["preferences"]
+            acheteur_data["preferences"],
+            acheteur_data["strategie"]
         )
         acheteurs.append(acheteur)
 
@@ -177,36 +178,29 @@ def main():
                         "service_id": service_id,
                         "prix": prix_avec_reduction
                     }
-                    # =====
                     # Début de la négociation
                     reponse_acheteur = acheteur.negocier(message)
 
                     # Boucle de négociation
-                    while reponse_acheteur["decision"] == -1:
+                    while reponse_acheteur["decision"] == 0:
                         reponse_fournisseur = fournisseur.repondre_negociation(reponse_acheteur)
-                        reponse_acheteur = acheteur.analyser_offre(reponse_fournisseur)
-
-                        if reponse_acheteur["decision"] == 1:
-                            print(f"Accord trouvé pour le service {reponse_acheteur['service_id']} au prix de {reponse_acheteur['prix']} euros.")
-                            acheteur.offres.append(reponse_acheteur)
+                        if reponse_fournisseur["decision"] != 0:
+                            reponse_acheteur = reponse_fournisseur
                             break
+                        reponse_acheteur = acheteur.negocier(reponse_fournisseur)
+
+                    if reponse_acheteur["decision"] == 1:
+                        print(f"Accord trouvé pour le service {reponse_acheteur['service_id']} au prix de {reponse_acheteur['prix']} euros.")
+                        acheteur.offres.append((reponse_acheteur, acheteur.budget - reponse_acheteur["prix"]))
+                    elif reponse_acheteur["decision"] == -1:
+                        print(f"La négociation a échoué pour le service {reponse_acheteur['service_id']}.")
                     # =====
-                    #acheteur.send_message(acheteur.host, acheteur.port, message)
-                    #response = acheteur.recieve_message()
-                    
-                    # reponse = acheteur.receive_message_direct(message)
-                    # decision = reponse.get("decision")
-                    
-                    # if decision > 0:
-                    #     acheteur.offres.append(reponse)
-                    # else:
-                    #     print(f"{acheteur.name} a refusé l'offre pour {service_id}.")
     
     print("====================Offres trouvées : ====================")
     for acheteur in acheteurs:
         print(f"{acheteur.name} a reçu les offres suivantes :")
-        for offre in acheteur.offres:
-            print(offre)
+        for offre, diff in acheteur.offres:
+            print(offre, diff)
             # Table pour stocker les billets achetés
 
     # Parcourir les offres et les traiter
@@ -220,19 +214,19 @@ def main():
             meilleure_offre = None
             meilleure_valeur = 0
 
-            for offre in acheteur.offres:
+            for offre, diff in acheteur.offres:
                 if offre["service_id"] in [billet["service_id"] for billet in billets_achetes]:
                     continue  # Ignorer les offres pour les services déjà achetés
 
-                if offre["decision"] > meilleure_valeur:
-                    meilleure_valeur = offre["decision"]
+                if diff > meilleure_valeur:
+                    meilleure_valeur = diff
                     meilleure_offre = offre
 
             if meilleure_offre:
                 acheteur.achete = True
                 billets_achetes.append({"service_id": meilleure_offre["service_id"]})
                 acheteurs_sans_billet.remove(acheteur)
-                print(f"L'acheteur {acheteur.name} a acheté {meilleure_offre['service_id']} pour {meilleure_offre['prix']} euros avec une valeur de décision de {meilleure_offre['decision']}.")
+                print(f"L'acheteur {acheteur.name} a acheté {meilleure_offre['service_id']} pour {meilleure_offre['prix']} euros avec une valeur de décision de {round(meilleure_valeur, 2)}.")
 
         if acheteurs_sans_billet:
             print(f"Les acheteurs suivants n'ont pas trouvé de billets dans la coalition {coalition}:")
