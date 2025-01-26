@@ -12,6 +12,23 @@ Modifiez le fichier config.json pour définir les fournisseurs, acheteurs et leu
 
 Assurez vous de ne pas avoir de doublon pour les ports et noms des agents
 
+### Structure du config.json
+- *mode* défini le mode de négociation utilisé par défaut en normal.
+- *coalition_unique* est un booléen qui défini si l'on forme des coalitions unique ou non (c'est à dire si l'on forme des coalitions ou pas).
+- *fournisseurs* est un tableau contenant la liste des fournisseurs disponible :
+    - *name* un nom unique pour identification
+    - *host* par défaut 127.0.0.1
+    - *port* un port unique pour la communication par socket.
+    - *services* dictionnaire avec les noms uniques des *billets*.
+        - les *billets* contiennent prix_min, date_limite, moyen_transport, temps_trajet.
+- *acheteurs* est un tableau contenant la liste des acheteurs disponible:
+    - *name* un nom unique pour identification
+    - *host* par défaut 127.0.0.1
+    - *port* un port unique pour la communication par socket.
+    - *budget* le budget maximum que l'acheteur peut se permettre.
+    - *preferences* l'ensemble des préférences de l'acheteurs: moyen_transport_pref, date_limite, temps_trajet_max avec un ordre de préférence associé.
+
+
 Exécutez le script principal. **main.py** Les étapes suivantes se dérouleront :
 - Formation des coalitions.
 - Démarrage des serveurs pour chaque agent.

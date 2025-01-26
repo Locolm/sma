@@ -91,6 +91,16 @@ def former_coalitions_idp(acheteurs):
 
     return meilleures_coalitions
 
+def former_coalitions_individuelles(acheteurs):
+    """Forme des coalitions individuelles pour chaque acheteur."""
+    coalitions = []
+    for acheteur in acheteurs:
+        noms_acheteurs = (acheteur.name,)
+        reduction = reductions_combinaisons.get_reduction(noms_acheteurs)
+        coalition = Coalition([acheteur], reduction)
+        coalitions.append(coalition)
+    return coalitions
+
 def main():
     config = load_config("config.json")
     mode = config.get("mode", "normal")
@@ -123,7 +133,10 @@ def main():
 
     print("fin de l'importation des acheteurs")
     # Former des coalitions
-    coalitions = former_coalitions_idp(acheteurs)
+    if ("coalition_unique" in config) and config["coalition_unique"]:
+        coalitions = former_coalitions_individuelles(acheteurs) # Chaque acheteur forme sa propre coalition <==> aucune coalition
+    else:
+        coalitions = former_coalitions_idp(acheteurs) # Formation des coalitions avec l'approche Improved Dynamic Programming
     print("fin de la formation des coalitions")
     print("Affichage des coalitions :")
     for coalition in coalitions:

@@ -1,5 +1,6 @@
 {
   "mode": "normal",
+  "coalition_unique": false,
   "fournisseurs": [
     {
       "name": "Fournisseur1",
