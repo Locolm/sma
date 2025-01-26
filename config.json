@@ -4,6 +4,7 @@
   "fournisseurs": [
     {
       "name": "Fournisseur1",
+      "strategie": "accept_first",
       "host": "127.0.0.1",
       "port": 5001,
       "services": {
@@ -29,6 +30,7 @@
     },
     {
       "name": "Fournisseur2",
+      "strategie": "accept_first",
       "host": "127.0.0.1",
       "port": 5002,
       "services": {
@@ -56,6 +58,7 @@
   "acheteurs": [
     {
       "name": "acheteur1",
+      "strategie": "accept_first",
       "host": "127.0.0.1",
       "port": 5003,
       "budget": 300,
@@ -67,6 +70,7 @@
     },
     {
       "name": "acheteur2",
+      "strategie": "accept_first",
       "host": "127.0.0.1",
       "port": 5004,
       "budget": 300,
@@ -78,6 +82,7 @@
     },
     {
       "name": "acheteur3",
+      "strategie": "accept_first",
       "host": "127.0.0.1",
       "port": 5005,
       "budget": 500,
@@ -89,6 +94,7 @@
     },
     {
       "name": "acheteur4",
+      "strategie": "accept_first",
       "host": "127.0.0.1",
       "port": 5006,
       "budget": 300,
@@ -100,6 +106,7 @@
     },
     {
       "name": "acheteur5",
+      "strategie": "accept_first",
       "host": "127.0.0.1",
       "port": 5007,
       "budget": 350,
@@ -111,6 +118,7 @@
     },
     {
       "name": "acheteur6",
+      "strategie": "accept_first",
       "host": "127.0.0.1",
       "port": 5008,
       "budget": 400,

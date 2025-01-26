@@ -175,20 +175,32 @@ def main():
 
                     message = {
                         "service_id": service_id,
-                        "prix": prix_avec_reduction,
-                        "details": service,
-                        "fournisseur": fournisseur.name,
-                        "fournisseurHost": fournisseur.host,
-                        "port": fournisseur.port
+                        "prix": prix_avec_reduction
                     }
+                    # =====
+                    # Début de la négociation
+                    reponse_acheteur = acheteur.negocier(message)
+
+                    # Boucle de négociation
+                    while reponse_acheteur["decision"] == -1:
+                        reponse_fournisseur = fournisseur.repondre_negociation(reponse_acheteur)
+                        reponse_acheteur = acheteur.analyser_offre(reponse_fournisseur)
+
+                        if reponse_acheteur["decision"] == 1:
+                            print(f"Accord trouvé pour le service {reponse_acheteur['service_id']} au prix de {reponse_acheteur['prix']} euros.")
+                            acheteur.offres.append(reponse_acheteur)
+                            break
+                    # =====
                     #acheteur.send_message(acheteur.host, acheteur.port, message)
                     #response = acheteur.recieve_message()
-                    reponse = acheteur.receive_message_direct(message)
-                    decision = reponse.get("decision")
-                    if decision > 0:
-                        acheteur.offres.append(reponse)
-                    else:
-                        print(f"{acheteur.name} a refusé l'offre pour {service_id}.")
+                    
+                    # reponse = acheteur.receive_message_direct(message)
+                    # decision = reponse.get("decision")
+                    
+                    # if decision > 0:
+                    #     acheteur.offres.append(reponse)
+                    # else:
+                    #     print(f"{acheteur.name} a refusé l'offre pour {service_id}.")
     
     print("====================Offres trouvées : ====================")
     for acheteur in acheteurs:
