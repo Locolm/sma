@@ -196,12 +196,12 @@ def main():
         for offre in acheteur.offres:
             print(offre)
             # Table pour stocker les billets achetés
-            billets_achetes = []
 
     # Parcourir les offres et les traiter
+    billets_achetes = []
+    random.shuffle(coalitions)
     for coalition in coalitions:
         print(f"====================Traitement des offres pour {coalition}====================")
-        billets_achetes = []
         acheteurs_sans_billet = list(coalition.acheteurs)
 
         for acheteur in coalition.acheteurs:
@@ -226,6 +226,15 @@ def main():
             print(f"Les acheteurs suivants n'ont pas trouvé de billets dans la coalition {coalition}:")
             for acheteur in acheteurs_sans_billet:
                 print(f"{acheteur.name}")
+    
+    print("====================Liste des billets achetés====================")
+    for billet in billets_achetes:
+        print(billet)
+    print("====================Liste des billets invendus====================")
+    for fournisseur in fournisseurs:
+        for service_id, service in fournisseur.services.items():
+            if service_id not in [billet["service_id"] for billet in billets_achetes]:
+                print(f"Service {service_id} de {fournisseur.name} est invendu.")
 
 if __name__ == "__main__":
     try:
