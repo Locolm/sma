@@ -96,7 +96,7 @@ def former_coalitions_individuelles(acheteurs):
     coalitions = []
     for acheteur in acheteurs:
         noms_acheteurs = (acheteur.name,)
-        reduction = reductions_combinaisons.get_reduction(noms_acheteurs)
+        reduction = 0
         coalition = Coalition([acheteur], reduction)
         coalitions.append(coalition)
     return coalitions
@@ -130,7 +130,6 @@ def main():
         )
         acheteurs.append(acheteur)
 
-
     print("fin de l'importation des acheteurs")
     # Former des coalitions
     if ("coalition_unique" in config) and config["coalition_unique"]:
@@ -149,8 +148,6 @@ def main():
     threads = [Thread(target=agent.start_server) for agent in agents]
     for thread in threads:
         thread.start()
-
-    time.sleep(1)
 
     # Simulation des propositions
     print("====================Simulation des propositions====================")
@@ -180,16 +177,16 @@ def main():
                     # =====
                     # Début de la négociation
                     reponse_acheteur = acheteur.negocier(message)
-
                     # Boucle de négociation
                     while reponse_acheteur["decision"] == -1:
                         reponse_fournisseur = fournisseur.repondre_negociation(reponse_acheteur)
-                        reponse_acheteur = acheteur.analyser_offre(reponse_fournisseur)
+                        reponse_acheteur = acheteur.negocier(reponse_fournisseur)
 
                         if reponse_acheteur["decision"] == 1:
                             print(f"Accord trouvé pour le service {reponse_acheteur['service_id']} au prix de {reponse_acheteur['prix']} euros.")
-                            acheteur.offres.append(reponse_acheteur)
                             break
+                    if reponse_acheteur["decision"] == 1:
+                        acheteur.offres.append(reponse_acheteur)
                     # =====
                     #acheteur.send_message(acheteur.host, acheteur.port, message)
                     #response = acheteur.recieve_message()
@@ -212,6 +209,9 @@ def main():
     # Parcourir les offres et les traiter
     billets_achetes = []
     random.shuffle(coalitions)
+    print("====================Liste des coalitions====================")
+    for coalition in coalitions:
+        print(coalition)
     for coalition in coalitions:
         print(f"====================Traitement des offres pour {coalition}====================")
         acheteurs_sans_billet = list(coalition.acheteurs)

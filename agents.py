@@ -228,11 +228,16 @@ class Coalition:
         self.reduction = reduction
 
     def __str__(self):
+        if (len(self.acheteurs)) == 1:
+            return f"Coalition ({self.acheteurs[0].name}) sans réduction"
         acheteurs_noms = ", ".join(acheteur.name for acheteur in self.acheteurs)
         return f"Coalition ({acheteurs_noms}) avec réduction {self.reduction}%"
 
     def appliquer_reduction(self, prix):
         """Applique la réduction au prix donné."""
+        if len(self.acheteurs) == 1:
+            self.reduction = 0
+            return prix
         prix_reduit = round(prix * (1 - self.reduction / 100), 2)
         print(f"Prix réduit pour {self}: {prix_reduit}")
         return prix_reduit

@@ -61,7 +61,7 @@
       "strategie": "accept_first",
       "host": "127.0.0.1",
       "port": 5003,
-      "budget": 300,
+      "budget": 100,
       "preferences": {
         "moyen_transport_pref": {"name": "avion", "order": 5},
         "date_limite": {"name": "2024-12-10", "order": 1},
@@ -73,7 +73,7 @@
       "strategie": "accept_first",
       "host": "127.0.0.1",
       "port": 5004,
-      "budget": 300,
+      "budget": 200,
       "preferences": {
         "moyen_transport_pref": {"name": "avion", "order": 5},
         "date_limite": {"name": "2024-12-10", "order": 1},
@@ -85,7 +85,7 @@
       "strategie": "accept_first",
       "host": "127.0.0.1",
       "port": 5005,
-      "budget": 500,
+      "budget": 250,
       "preferences": {
         "moyen_transport_pref": {"name": "avion", "order": 3},
         "date_limite": {"name": "2024-12-12", "order": 2},
