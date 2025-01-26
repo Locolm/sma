@@ -16,12 +16,14 @@ Assurez vous de ne pas avoir de doublon pour les ports et noms des agents
 - *mode* défini le mode de négociation utilisé par défaut en normal.
 - *coalition_unique* est un booléen qui défini si l'on forme des coalitions unique ou non (c'est à dire si l'on forme des coalitions ou pas).
 - *fournisseurs* est un tableau contenant la liste des fournisseurs disponible :
+    - *strategie* la stratégie de négociation utilisée.
     - *name* un nom unique pour identification
     - *host* par défaut 127.0.0.1
     - *port* un port unique pour la communication par socket.
     - *services* dictionnaire avec les noms uniques des *billets*.
         - les *billets* contiennent prix_min, date_limite, moyen_transport, temps_trajet.
 - *acheteurs* est un tableau contenant la liste des acheteurs disponible:
+    - *strategie* la stratégie de négociation utilisée
     - *name* un nom unique pour identification
     - *host* par défaut 127.0.0.1
     - *port* un port unique pour la communication par socket.
@@ -62,4 +64,11 @@ Les acheteurs se regroupent en coalitions basées sur :
 
 ### Mécanisme de communication :
 
-Les agents communiquent via des sockets pour envoyer et recevoir des messages.
+Les agents communiquent via des sockets pour envoyer et recevoir des messages lors de la négociation.
+
+voici les différentes méthodes de négociations disponible (pour chaque porposition le prix est accepté seulement s'il est compris dans le budget de l'acheteur ou dans le prix minimal du fournisseur):
+ - *accept_first* accepte le premier prix s'il correspond à son budget, sinon il le rejette.
+ - *reject_first_accept_second* rejette le premier prix et accepte le deuxième prix.
+ - *randomly_accept* accepte le prix proposé à hauteur de 50%.
+ - *negotiate_until_satisfied* accepte le premier prix qui correspond à son budget après négociation.
+ - *negotiate_once* négocie le prix une seule fois.
