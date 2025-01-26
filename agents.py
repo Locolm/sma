@@ -4,6 +4,9 @@ import socket
 import json
 #on fait des coalitions d'acheteur uniquement 
 
+from enum import Enum
+import random
+
 class AgentBase:
     def __init__(self, name, host, port):
         self.name = name  # Nom de l'agent
@@ -44,9 +47,10 @@ class AgentBase:
 
 
 class Fournisseur(AgentBase):
-    def __init__(self, name, host, port, services):
+    def __init__(self, name, host, port, services, strategie="accept_first"):
         super().__init__(name, host, port)
         self.services = services  # Liste des services disponibles (dictionnaire avec details)
+        self.strategy = strategie
         self.services_achetes = set()  # Pour suivre les services achetés
 
     def proposer_service(self, acheteur_host, acheteur_port, service_id, mode):
@@ -72,15 +76,41 @@ class Fournisseur(AgentBase):
 
             self.send_message(acheteur_host, acheteur_port, message)
             print(f"{self.name} a proposé le service {service_id} pour {prix_initial} euros.")
+    
+    def repondre_negociation(self, message):
+        """Répond à une contre-offre en fonction de la stratégie."""
+        prix_par_acheteur = message["prix"]
+        service_id = message["service_id"]
+
+        if self.strategy == "accept_first":
+            print(f"{self.name} accepte immédiatement le prix proposé de {prix_par_acheteur} pour {service_id}.")
+            return {"service_id": service_id, "prix": prix_par_acheteur, "decision": 1}
+
+        elif self.strategy == "randomly_accept":
+            die = random.randint(1, 100)
+            if die > 50:
+                print(f"{self.name} accepte aléatoirement le prix proposé de {prix_par_acheteur} pour {service_id}.")
+                return {"service_id": service_id, "prix": prix_par_acheteur, "decision": 1}
+            else:
+                nouveau_prix = round(prix_par_acheteur * 1.05, 2)  # Augmente de 5%
+                print(f"{self.name} refuse et contre-propose un nouveau prix : {nouveau_prix}.")
+                return {"service_id": service_id, "prix": nouveau_prix, "decision": -1}
+
+        elif self.strategy in ["negotiate_until_satisfied", "reject_first_accept_second", "negotiate_once"]:
+            nouveau_prix = round(prix_par_acheteur * 1.05, 2)  # Augmente de 5%
+            print(f"{self.name} refuse et propose un nouveau prix : {nouveau_prix}.")
+            return {"service_id": service_id, "prix": nouveau_prix, "decision": -1}
 
 
 class Acheteur(AgentBase):
-    def __init__(self, name, host, port, budget, preferences):
+    def __init__(self, name, host, port, budget, preferences, strategie="accept_first"):
         super().__init__(name, host, port)
         self.budget = budget
+        self.strategy = strategie
         self.preferences = preferences
         self.achete=False
         self.offres = []  # Pour suivre les offres reçues
+        self.previous_rejected = []  # Pour suivre les offres rejetées
 
     def analyser_offre(self, offre):
         """Analyse une offre reçue."""
@@ -94,6 +124,61 @@ class Acheteur(AgentBase):
             print(f"{self.name} refuse l'offre car le prix dépasse le budget de {prix - self.budget} euros.")
 
         return self.budget - prix
+    
+    def negocier(self, offre):
+        """Analyse une offre reçue et applique la stratégie choisie."""
+        prix = offre["prix"]
+        service_id = offre["service_id"]
+        print(f"{self.name} analyse l'offre {service_id} à {prix} euros.")
+
+        if self.strategy == "accept_first":
+            if prix <= self.budget:
+                print(f"{self.name} accepte immédiatement l'offre pour {service_id}.")
+                return {"decision": 1, "prix": prix, "service_id":service_id}  # Accepte directement
+            else:
+                print(f"{self.name} refuse car le prix dépasse le budget.")
+                return {"decision": -1, "prix": max(0, prix * 0.9), "service_id":service_id}  # Propose un prix inférieur
+
+        elif self.strategy == "reject_first_accept_second":
+            if service_id in self.previous_rejected:
+                if prix <= self.budget:
+                    print(f"{self.name} accepte l'offre pour {service_id} après un rejet initial.")
+                    return {"decision": 1, "prix": prix, "service_id":service_id}
+            else:
+                self.previous_rejected.append(service_id)
+                nouveau_prix = round(prix * 0.9, 2)  # Réduction de 10%
+                print(f"{self.name} rejette l'offre initiale et propose un nouveau prix : {nouveau_prix}.")
+                return {"decision": -1, "prix": nouveau_prix, "service_id":service_id}
+
+        elif self.strategy == "randomly_accept":
+            die = random.randint(1, 100)
+            if prix <= self.budget and die > 50:
+                print(f"{self.name} accepte l'offre aléatoirement pour {service_id}.")
+                return {"decision": 1, "prix": prix, "service_id":service_id}
+            else:
+                nouveau_prix = round(prix * 0.9, 2)
+                print(f"{self.name} refuse et propose un nouveau prix : {nouveau_prix}.")
+                return {"decision": -1, "prix": nouveau_prix, "service_id":service_id}
+
+        elif self.strategy == "negotiate_until_satisfied":
+            if prix <= self.budget:
+                print(f"{self.name} accepte l'offre pour {service_id}.")
+                return {"decision": 1, "prix": prix, "service_id":service_id}
+            else:
+                nouveau_prix = round(prix * 0.9, 2)
+                print(f"{self.name} rejette et continue à négocier avec un prix de {nouveau_prix}.")
+                return {"decision": -1, "prix": nouveau_prix, "service_id":service_id}
+
+        elif self.strategy == "negotiate_once":
+            if service_id in self.previous_rejected:
+                if prix <= self.budget:
+                    print(f"{self.name} accepte l'offre pour {service_id} après une seule négociation.")
+                    return {"decision": 1, "prix": prix, "service_id":service_id}
+            else:
+                self.previous_rejected.append(service_id)
+                nouveau_prix = round(prix * 0.9, 2)
+                print(f"{self.name} rejette une fois et propose un nouveau prix : {nouveau_prix}.")
+                return {"decision": -1, "prix": nouveau_prix, "service_id":service_id}
 
     def envoyer_reponse(self, fournisseur_host, fournisseur_port, offre, decision):
         """Envoie une réponse au fournisseur."""
