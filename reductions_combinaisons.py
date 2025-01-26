@@ -6,9 +6,8 @@ def get_reduction(noms_acheteurs):
     """Retourne la réduction de la coalition"""
     preferences = get_preferences_from_json("config.json", ["acheteur1", "acheteur2", "acheteur3"])
     similarity_score = calculate_similarity(preferences)
-    print("REUDCTION", random.randint(0, len(noms_acheteurs))+ similarity_score)
-    return random.randint(0, len(noms_acheteurs))+ similarity_score
-# on essaie de faire une coalition avec les acheteurs qui ont des preferences et bugets similaires tout en favorisant les gros groupes d'acheteurs.
+    return random.randint(0, similarity_score)
+# on essaie de faire une coalition avec les acheteurs qui ont des preferences similaires.
 
 def get_preferences_from_json(file_path, noms_acheteurs):
     with open(file_path, 'r') as file:

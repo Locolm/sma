@@ -41,7 +41,6 @@ Exécutez le script principal. **main.py** Les étapes suivantes se dérouleront
 Les acheteurs se regroupent en coalitions basées sur :
 - Une valeur aléatoire influencée par la similitude de leurs préférences (mode de transport, date limite, etc.).
 - Leurs budgets respectifs.
-- Les grosses coalitions sont favorisées.
 
 ### Négociation des prix
 - Si un acheteur ne peut pas se permettre un billet au prix initial, une négociation est déclenchée.
@@ -54,7 +53,6 @@ Les acheteurs se regroupent en coalitions basées sur :
 - Les coalitions tentent de créer les meilleur combinaisons acheteurs billets, c'est à dire les combinaison avec le plus gros gain.
 
 ## Structure du code
-Décrit les fournisseurs, acheteurs, services disponibles (billets), et les préférences des agents.
 
 ### Agents :
 
