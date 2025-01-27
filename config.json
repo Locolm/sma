@@ -1,6 +1,7 @@
 {
   "mode": "normal",
   "coalition_unique": false,
+  "coalition_coeficient_random": false, 
   "fournisseurs": [
     {
       "name": "Fournisseur1",
@@ -115,30 +116,6 @@
         "moyen_transport_pref": {"name": "train", "order": 3},
         "date_limite": {"name": "2024-12-14", "order": 2},
         "temps_trajet_max": {"name": "5h", "order": 4}
-      }
-    },
-    {
-      "name": "acheteur6",
-      "strategie": "negotiate_until_satisfied",
-      "host": "127.0.0.1",
-      "port": 5008,
-      "budget": 400,
-      "preferences": {
-        "moyen_transport_pref": {"name": "train", "order": 4},
-        "date_limite": {"name": "2024-12-11", "order": 1},
-        "temps_trajet_max": {"name": "5h", "order": 2}
-      }
-    },
-    {
-      "name": "acheteur7",
-      "strategie": "negotiate_until_satisfied",
-      "host": "127.0.0.1",
-      "port": 5009,
-      "budget": 1000,
-      "preferences": {
-        "moyen_transport_pref": {"name": "jet privé", "order": 1},
-        "date_limite": {"name": "2024-13-11", "order": 2},
-        "temps_trajet_max": {"name": "5h", "order": 5}
       }
     }
   ]

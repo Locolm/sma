@@ -24,21 +24,24 @@ def load_config(file_path):
     with open(file_path, "r") as file:
         return json.load(file)
 
-def valeur_coalition(coalition):
+def valeur_coalition(coalition, isRandom=False):
     """Calcule la valeur d'une coalition en fonction des budgets et de la réduction prédéfinie."""
     noms_acheteurs = tuple(sorted(acheteur.name.lower() for acheteur in coalition))
-    #reduction = REDUCTIONS_COMBINAISONS.get(noms_acheteurs, 0)  # Réduction par défaut : 0%
-    reduction= reductions_combinaisons.get_reduction(noms_acheteurs)
+    reduction = 0
+    if(isRandom):
+        reduction = reductions_combinaisons.get_reduction(noms_acheteurs)
+    else:
+        reduction = REDUCTIONS_COMBINAISONS.get(noms_acheteurs, 0)  # Réduction par défaut : 0%
     budgets = [acheteur.budget for acheteur in coalition]
     valeur_totale = sum(budgets) * (reduction / 100)
     return valeur_totale
 
-def former_coalitions_idp(acheteurs):
+def former_coalitions_idp(acheteurs, isRandom=False):
     """Forme les meilleures coalitions avec l'approche Improved Dynamic Programming."""
     # Cache pour stocker la meilleure valeur et la meilleure coalition pour chaque ensemble d'acheteurs
     cache = {}
 
-    def valeur_coalition_memo(coalition):
+    def valeur_coalition_memo(coalition, isRandom):
         """Calcule ou récupère la meilleure valeur et la meilleure coalition mémorisée."""
         noms_acheteurs = tuple(sorted([acheteur.name.lower() for acheteur in coalition]))
         
@@ -47,7 +50,7 @@ def former_coalitions_idp(acheteurs):
             return cache[noms_acheteurs]
         
         # Calcul de la valeur totale pour cette coalition
-        valeur_totale = valeur_coalition(coalition)
+        valeur_totale = valeur_coalition(coalition, isRandom)
         
         # Stockage dans le cache : (valeur_totale, coalition)
         cache[noms_acheteurs] = (valeur_totale, coalition)
@@ -67,7 +70,7 @@ def former_coalitions_idp(acheteurs):
             nouvelle_generation = set()
             for coalition in sous_coalitions:
                 # Récupération ou calcul de la valeur de la coalition
-                valeur, _ = valeur_coalition_memo(coalition)
+                valeur, _ = valeur_coalition_memo(coalition, isRandom)
                 if valeur > meilleure_valeur:
                     meilleure_valeur = valeur
                     meilleure_coalition = coalition
@@ -82,8 +85,10 @@ def former_coalitions_idp(acheteurs):
 
         if meilleure_coalition:
             noms_acheteurs = tuple(sorted([acheteur.name for acheteur in meilleure_coalition]))
-            #reduction = REDUCTIONS_COMBINAISONS.get(noms_acheteurs, 0)
-            reduction=reductions_combinaisons.get_reduction(noms_acheteurs)
+            if isRandom:
+                reduction = reductions_combinaisons.get_reduction(noms_acheteurs)
+            else:
+                reduction = REDUCTIONS_COMBINAISONS.get(noms_acheteurs, 0)
             coalition = Coalition(list(meilleure_coalition), reduction)
             meilleures_coalitions.append(coalition)
 
@@ -136,7 +141,11 @@ def main():
     if ("coalition_unique" in config) and config["coalition_unique"]:
         coalitions = former_coalitions_individuelles(acheteurs) # Chaque acheteur forme sa propre coalition <==> aucune coalition
     else:
-        coalitions = former_coalitions_idp(acheteurs) # Formation des coalitions avec l'approche Improved Dynamic Programming
+        # Formation des coalitions avec l'approche Improved Dynamic Programming
+        if ("coalition_coeficient_random" in config) and config["coalition_coeficient_random"]:
+            coalitions = former_coalitions_idp(acheteurs, isRandom=True)
+        else:
+            coalitions = former_coalitions_idp(acheteurs)
     print("fin de la formation des coalitions")
     print("Affichage des coalitions :")
     for coalition in coalitions:
