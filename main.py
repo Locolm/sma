@@ -177,7 +177,8 @@ def main():
                 for service_id, service in list(fournisseur.services.items()):  # Utiliser list pour pouvoir modifier la dict
                     print(f"===================={service_id}====================")
                     # On propose un service si l'acheteur n'a pas encore acheté ce service
-                    prix_avec_reduction = coalition.appliquer_reduction(service["prix_min"])
+                    prix_initial = random.randint(service['prix_min']+10, service['prix_min'] + 100)
+                    prix_avec_reduction = coalition.appliquer_reduction(prix_initial)
                     print(f"{fournisseur.name} propose {service_id} à {prix_avec_reduction} euros pour {coalition}.")
 
                     message = {
@@ -196,7 +197,7 @@ def main():
 
                     if reponse_acheteur["decision"] == 1:
                         print(f"Accord trouvé pour le service {reponse_acheteur['service_id']} au prix de {reponse_acheteur['prix']} euros.")
-                        acheteur.offres.append((reponse_acheteur, acheteur.budget - reponse_acheteur["prix"]))
+                        acheteur.offres.append((reponse_acheteur, round(acheteur.budget - reponse_acheteur["prix"],2)))
                     elif reponse_acheteur["decision"] == -1:
                         print(f"La négociation a échoué pour le service {reponse_acheteur['service_id']}.")
                     # =====

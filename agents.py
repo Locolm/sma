@@ -52,30 +52,6 @@ class Fournisseur(AgentBase):
         self.services = services  # Liste des services disponibles (dictionnaire avec details)
         self.strategy = strategie
         self.services_achetes = set()  # Pour suivre les services achetés
-
-    def proposer_service(self, acheteur_host, acheteur_port, service_id, mode):
-        """Propose un service à un agent acheteur."""
-        if service_id in self.services_achetes:
-            print(f"Service {service_id} déjà acheté, proposition ignorée.")
-            return
-        
-        if service_id in self.services:
-            service = self.services[service_id]
-            prix_initial = random.randint(service['prix_min'], service['prix_min'] + 100)
-
-            message = {
-                "type": "proposition",
-                "service_id": service_id,
-                "prix": prix_initial,
-                "details": {
-                    "service": service,
-                    "fournisseur": self.name,
-                    "port": self.port
-                }
-            }
-
-            self.send_message(acheteur_host, acheteur_port, message)
-            print(f"{self.name} a proposé le service {service_id} pour {prix_initial} euros.")
     
     def repondre_negociation(self, message):
         """Répond à une contre-offre en fonction de la stratégie."""
@@ -216,20 +192,6 @@ class Acheteur(AgentBase):
                 decision = self.analyser_offre(message)
                 self.envoyer_reponse(message["fournisseurHost"], message["port"], message, decision)
                 return {"decision": decision, "service_id": message["service_id"]}
-            
-    def receive_message_direct(self, message):
-        """Traite un message reçu directement sans utiliser de socket."""
-        print(f"{self.name} a reçu un message : {message}")
-
-        if "fournisseur" not in message:
-            print("La clé 'fournisseur' est manquante dans le message.")
-            return {"decision": -1, "service_id": message["service_id"]}
-
-        # Analyser l'offre et envoyer une réponse
-        decision = self.analyser_offre(message)
-        return {"decision": decision, "service_id": message["service_id"], "prix": message["prix"], "fournisseur": message["fournisseur"]}
-
-
 
 class Coalition:
     def __init__(self, acheteurs, reduction):
