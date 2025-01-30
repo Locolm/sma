@@ -7,7 +7,7 @@ def get_reduction(noms_acheteurs):
     preferences = get_preferences_from_json("config.json", ["acheteur1", "acheteur2", "acheteur3"])
     similarity_score = calculate_similarity(preferences)
     similarity_score+=1
-    return random.randint(0, similarity_score)
+    return random.randint(1, similarity_score)
 # on essaie de faire une coalition avec les acheteurs qui ont des preferences similaires.
 
 def get_preferences_from_json(file_path, noms_acheteurs):
